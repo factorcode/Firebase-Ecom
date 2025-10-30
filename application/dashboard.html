@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Business dashboard">
+    <title>Dashboard - E-Commerce App</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+
+    <script type="module" src="js/dashboard.js" defer></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed', err));
+        }
+    </script>
+</head>
+<body>
+    <header class="page-header">
+        <h1>Dashboard</h1>
+        <div class="header-actions">
+            <a href="product-form.html" class="btn btn-primary">+ Add Product</a>
+            <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="welcome-section">
+            <p>Welcome, <span id="user-email"></span></p>
+        </div>
+
+        <div class="business-profile-section">
+            <h2>Business Profile</h2>
+            <div id="business-profile-form">
+                <div class="form-group">
+                    <label for="business-display-name">Business Display Name</label>
+                    <input type="text" id="business-display-name" placeholder="Enter your business name" maxlength="50">
+                </div>
+                <button id="save-business-name-btn" class="btn btn-primary">Save Business Name</button>
+                <div id="profile-message" class="form-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="product-list-container">
+            <h2>Your Products</h2>
+            <div id="business-products" class="business-products">
+            </div>
+            <div id="no-products" class="empty-state" style="display: none;">
+                <p>You haven't added any products yet.</p>
+                <a href="product-form.html" class="btn btn-primary">Add Your First Product</a>
+            </div>
+        </div>
+    </main>
+
+    
+</body>
+</html>

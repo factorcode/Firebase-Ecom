@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Add or edit product">
+    <title>Product Form - E-Commerce App</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="manifest" href="manifest.json">
+
+    <script type="module" src="js/product-form.js" defer></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed', err));
+        }
+    </script>
+</head>
+<body>
+    <header class="page-header">
+        <h1 id="page-title">Add Product</h1>
+        <div class="header-actions">
+            <a href="dashboard.html" class="btn btn-back">← Back to Dashboard</a>
+            <button id="logout-btn" class="btn btn-secondary">Logout</button>
+        </div>
+    </header>
+
+    <main class="product-form-main">
+        <div class="form-container">
+            <div id="form-message" class="form-message" style="display: none;"></div>
+
+            <form id="product-form">
+                <input type="hidden" id="edit-product-id">
+                <input type="hidden" id="edit-product-image-url">
+
+                <div class="form-group">
+                    <label for="product-name">Product Name *</label>
+                    <input type="text" id="product-name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-description">Description *</label>
+                    <textarea id="product-description" rows="5" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-price">Price ($) *</label>
+                    <input type="number" id="product-price" step="0.01" min="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-image">Product Image</label>
+                    <input type="file" id="product-image" accept="image/jpeg,image/png,image/webp">
+                    <small>Max size: 5MB. Formats: JPG, PNG, WebP</small>
+                </div>
+
+                <div id="current-image-preview" style="display: none;">
+                    <p><strong>Current Image:</strong></p>
+                    <img id="preview-image" src="" alt="Current product" style="max-width: 200px; border-radius: 8px; margin-bottom: 1rem;">
+                    <p><small>Upload a new image to replace the current one</small></p>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submit-btn">Add Product</button>
+                    <a href="dashboard.html" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+</html>
