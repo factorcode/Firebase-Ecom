@@ -6,6 +6,7 @@
     <meta name="description" content="Browse products">
     <title>Shop - E-Commerce App</title>
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <script type="module" src="js/shopper.js" defer></script>
     <script>
@@ -18,8 +19,15 @@
 </head>
 <body>
     <header class="page-header">
-        <h1>Shop Products</h1>
-        <a href="index.html" class="btn btn-back">← Back to Home</a>
+        <div class="header-content">
+            <h1>Shop Products</h1>
+            <div class="header-actions">
+                <a href="index.html" class="btn btn-back">← Back to Home</a>
+                <a href="favorites.html" class="btn btn-secondary" id="favorites-link" style="display: none;">My Favorites</a>
+                <button id="login-btn" class="btn btn-primary">Login</button>
+                <button id="logout-btn" class="btn btn-back" style="display: none;">Logout</button>
+            </div>
+        </div>
     </header>
 
     <main class="shopper-main">

@@ -1,16 +1,32 @@
 import { db } from './firebaseConfig.js';
-import { collection, query, onSnapshot, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { collection, query, onSnapshot, orderBy, doc, getDoc, updateDoc, arrayUnion, arrayRemove, setDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { getCurrentUser, onAuthChange, logOut } from './auth.js';
 
 const productsGrid = document.getElementById('products-grid');
 const emptyState = document.getElementById('empty-state');
 const businessFilter = document.getElementById('business-filter');
+const loginBtn = document.getElementById('login-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const favoritesLink = document.getElementById('favorites-link');
 
 let allProducts = [];
+let currentUser = null;
+let userFavorites = new Set();
 
 function createProductCard(product) {
+    const isFavorite = userFavorites.has(product.id);
+    const favoriteBtn = currentUser ? `
+        <button class="favorite-btn ${isFavorite ? 'favorited' : ''}"
+                data-product-id="${product.id}"
+                aria-label="${isFavorite ? 'Remove from favorites' : 'Add to favorites'}">
+            <i class="${isFavorite ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+        </button>
+    ` : '';
+
     return `
-        <div class="product-card" data-business="${product.businessDisplayName || 'Unknown'}">
+        <div class="product-card" data-business="${product.businessDisplayName || 'Unknown'}" data-product-id="${product.id}">
             <div class="product-image-container">
+                ${favoriteBtn}
                 <img src="${product.imageURL}"
                      alt="${product.name}"
                      class="product-image">
@@ -41,6 +57,13 @@ function renderProducts(products) {
         const productCard = createProductCard(product);
         productsGrid.insertAdjacentHTML('beforeend', productCard);
     });
+
+    // Add event listeners to favorite buttons
+    if (currentUser) {
+        document.querySelectorAll('.favorite-btn').forEach(btn => {
+            btn.addEventListener('click', handleFavoriteClick);
+        });
+    }
 }
 
 function updateBusinessFilter() {
@@ -95,7 +118,7 @@ function loadProducts() {
             }
 
             snapshot.forEach((doc) => {
-                allProducts.push(doc.data());
+                allProducts.push({ id: doc.id, ...doc.data() });
             });
 
             updateBusinessFilter();
@@ -109,6 +132,109 @@ function loadProducts() {
         productsGrid.innerHTML = '<p class="error-message">Error loading products. Please check your Firebase configuration.</p>';
     }
 }
+
+async function handleFavoriteClick(e) {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const productId = btn.dataset.productId;
+
+    if (!currentUser) {
+        alert('Please login to add favorites');
+        return;
+    }
+
+    try {
+        const userRef = doc(db, 'users', currentUser.uid);
+
+        if (userFavorites.has(productId)) {
+            // Remove from favorites
+            await updateDoc(userRef, {
+                favorites: arrayRemove(productId)
+            });
+
+            userFavorites.delete(productId);
+            btn.classList.remove('favorited');
+            btn.innerHTML = '<i class="fa-regular fa-heart"></i>';
+            btn.setAttribute('aria-label', 'Add to favorites');
+        } else {
+            // Add to favorites - create user document if it doesn't exist
+            const userDoc = await getDoc(userRef);
+            if (!userDoc.exists()) {
+                await setDoc(userRef, {
+                    favorites: [productId]
+                });
+            } else {
+                await updateDoc(userRef, {
+                    favorites: arrayUnion(productId)
+                });
+            }
+
+            userFavorites.add(productId);
+            btn.classList.add('favorited');
+            btn.innerHTML = '<i class="fa-solid fa-heart"></i>';
+            btn.setAttribute('aria-label', 'Remove from favorites');
+        }
+    } catch (error) {
+        console.error('Error updating favorite:', error);
+        alert('Failed to update favorite. Please try again.');
+    }
+}
+
+async function loadUserFavorites() {
+    if (!currentUser) {
+        userFavorites.clear();
+        return;
+    }
+
+    try {
+        const userRef = doc(db, 'users', currentUser.uid);
+        const userDoc = await getDoc(userRef);
+        const favorites = userDoc.data()?.favorites || [];
+
+        userFavorites.clear();
+        favorites.forEach(productId => {
+            userFavorites.add(productId);
+        });
+    } catch (error) {
+        console.error('Error loading favorites:', error);
+    }
+}
+
+function updateAuthUI() {
+    if (currentUser) {
+        loginBtn.style.display = 'none';
+        logoutBtn.style.display = 'inline-block';
+        favoritesLink.style.display = 'inline-block';
+    } else {
+        loginBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'none';
+        favoritesLink.style.display = 'none';
+    }
+}
+
+// Auth state observer
+onAuthChange(async (user) => {
+    currentUser = user;
+    await loadUserFavorites();
+    updateAuthUI();
+    filterProducts(); // Re-render products with updated favorite states
+});
+
+// Auth button handlers
+loginBtn.addEventListener('click', () => {
+    window.location.href = 'customer-login.html';
+});
+
+logoutBtn.addEventListener('click', async () => {
+    try {
+        await logOut();
+        userFavorites.clear();
+        filterProducts(); // Re-render products without favorite buttons
+    } catch (error) {
+        console.error('Error logging out:', error);
+        alert('Failed to logout. Please try again.');
+    }
+});
 
 businessFilter.addEventListener('change', filterProducts);
 
