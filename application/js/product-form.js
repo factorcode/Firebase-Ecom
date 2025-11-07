@@ -136,11 +136,6 @@ async function handleSubmit(e) {
         }
     }
 
-    if (!isEditMode && !imageFile) {
-        showMessage('Please upload a product image.', true);
-        return;
-    }
-
     submitBtn.disabled = true;
     const originalText = submitBtn.textContent;
     submitBtn.textContent = isEditMode ? 'Updating...' : 'Adding...';
@@ -149,7 +144,7 @@ async function handleSubmit(e) {
         let imageURL = editProductImageUrlInput.value || null;
 
         if (imageFile) {
-            if (isEditMode && imageURL && !imageURL.includes('placeholder')) {
+            if (isEditMode && imageURL && !imageURL.includes('picsum.photos')) {
                 try {
                     const oldImageRef = ref(storage, imageURL);
                     await deleteObject(oldImageRef);
@@ -159,6 +154,10 @@ async function handleSubmit(e) {
             }
 
             imageURL = await uploadImage(imageFile, currentUser.uid);
+        } else if (!isEditMode && !imageURL) {
+            // Use a random placeholder image from picsum.photos
+            const randomId = Math.floor(Math.random() * 1000);
+            imageURL = `https://picsum.photos/seed/${randomId}/800/600`;
         }
 
         const businessDoc = await getDoc(doc(db, 'businesses', currentUser.uid));
